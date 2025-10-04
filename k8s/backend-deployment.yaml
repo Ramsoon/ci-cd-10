@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: final-project
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: YOUR_DOCKERHUB_USER/final-back:latest   # replace
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DB_HOST
+          value: "postgres-service"    # if using Postgres
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "mydb"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_USER
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_PASS
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: final-project
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: ClusterIP

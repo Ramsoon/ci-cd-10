@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: final-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: YOUR_DOCKERHUB_USER/final-front:latest   # replace
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        env:
+        - name: REACT_APP_API_URL
+          value: "http://nginx-loadbalancer:80"   # frontend calls nginx proxy
+        - name: REACT_APP_WELCOME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: REACT_APP_WELCOME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: final-project
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080
+  type: NodePort
